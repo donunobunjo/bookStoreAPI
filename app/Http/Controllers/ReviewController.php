@@ -6,27 +6,34 @@ use Illuminate\Http\Request;
 use App\Book;
 use App\Review;
 use App\Http\Resources\ReviewResource;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    //Restrict access to only authenticated users
+    public function __construct()
+    {
+      $this->middleware(['auth:api']);
+    }    
     public function index()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+   
     public function store(Request $request, Book $book)
     {
+        //Validate the review
+        $validator = Validator::make($request->all(),[
+            'review'=>'required|exists',
+            'comment'=>'required',
+        ]);
+        if ($validator->fails()){
+            Response::json(['errors'=>$validator->errors()],422);
+        }
+
+        //Store the review in the database
         $review = Review::firstOrCreate(
             [
               'user_id' => $request->user()->id,
@@ -41,35 +48,18 @@ class ReviewController extends Controller
           return new ReviewResource($review);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    
     public function destroy($id)
     {
         //

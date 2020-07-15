@@ -4,28 +4,41 @@ namespace App\Http\Controllers;
 use App\Book;
 use App\Http\Resources\BookResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    public function __construct()
+    {
+      $this->middleware(['auth:api','admin'])->except(['index']);
+    }
     public function index()
     {
         return BookResource::collection(Book::with('reviews')->paginate(10));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
-        //
+        //validating
+        $validator = Validator::make($request->all(),[
+            'isbn'=>'required|unique|max:13',
+            'title'=>'required',
+            'description'=>'required'
+
+        ]);
+        if ($validator->fails()){
+            Response::json(['errors'=>$validator->errors()],422);
+        }
+
+        //Pesisting to database
+        $book = Book::create([
+            'isbn'=>$request->isbn,
+            'title'=>$request->title,
+            'description'=>$request->description,
+        ]);
+        return new BookResource($book);
     }
 
     /**
